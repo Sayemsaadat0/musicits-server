@@ -31,8 +31,17 @@ async function run() {
      const instractorCollection = client.db("musicits").collection("instractor");
      const popularclassCollection = client.db("musicits").collection("popularclass");
      const popularinstractorCollection = client.db("musicits").collection("popularinstractor");
+     const studentCollection = client.db("musicits").collection("students")
 
 
+
+
+   //   post 
+   app.post('/students', async(req, res)=>{
+      const item = req.body 
+      const result = await studentCollection.insertOne(item)
+      res.send(result)
+    })
 
 
 
@@ -56,18 +65,13 @@ async function run() {
         res.send(result)
      })
      app.get('/popularclass', async(req,res)=>{
-        const result = await popularclassCollection.find().toArray()
+        const result = await popularclassCollection.find().sort({ total_student: -1 }).toArray()
         res.send(result)
      })
      app.get('/popularinstractor', async(req,res)=>{
-        const result = await popularinstractorCollection.find().toArray()
+        const result = await popularinstractorCollection.find().sort({ total_student: -1 }).toArray()
         res.send(result)
      })
-
-
-
-
-
 
 
 
