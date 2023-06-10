@@ -34,6 +34,8 @@ async function run() {
      const popularinstractorCollection = client.db("musicits").collection("popularinstractor");
      const usersCollection = client.db("musicits").collection("users")
      const selectedclassCollection = client.db("musicits").collection("selectedclass")
+     const manageclassCollection = client.db("musicits").collection("manageclass")
+     const myclassCollection = client.db("musicits").collection("myclass")
 
 
 
@@ -65,6 +67,12 @@ async function run() {
       res.send(result)
     })
 
+   app.post('/manageclass', async(req, res)=>{
+      const item = req.body 
+      const result = await manageclassCollection.insertOne(item)
+      res.send(result)
+    })
+
 
     //  getting data from the databse
      app.get('/classes', async(req,res)=>{
@@ -83,6 +91,8 @@ async function run() {
         const result = await popularinstractorCollection.find().sort({ total_users: -1 }).toArray()
         res.send(result)
      })
+
+
      app.get('/selectedclass', async(req,res)=>{
       const email = req.query.email 
       if(!email){
@@ -98,6 +108,21 @@ async function run() {
       res.send(result)
      })
 
+     app.get('/manageclass', async (req, res) => {
+      const result = await manageclassCollection.find().sort({ total_users: -1 }).toArray();
+      res.send(result);
+    });
+    
+
+    app.get('/myclass', async(req,res)=>{
+      const email = req.query.email 
+      if(!email){
+         res.send([])
+      } 
+      const query = {email : email}
+        const result = await manageclassCollection.find(query).sort({ total_users: -1 }).toArray()
+        res.send(result)
+     })
 
    //   patch/put  
    app.patch('/users/admin/:id', async(req,res)=>{
@@ -111,7 +136,6 @@ async function run() {
    const result = await usersCollection.updateOne(filter,updateDoc)
    res.send(result)
       })
-
 
       app.patch('/users/instructor/:id', async (req, res) => {
          const id = req.params.id;
@@ -127,12 +151,17 @@ async function run() {
        });
 
 
-
-
-
-
-
-
+       app.patch('/manageclass/:id', async(req,res)=>{
+        const id  = req.params.id 
+        const filter =  {_id : new ObjectId(id)}
+        const updateDoc = {
+           $set: {
+             status : 'Denied'
+           },
+         };
+     const result = await manageclassCollection.updateOne(filter,updateDoc)
+     res.send(result)
+        })
 
 
    //   delete data
