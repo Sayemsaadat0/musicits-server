@@ -4,6 +4,7 @@ const cors = require('cors')
 const port = process.env.PORT || 4444 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
+var jwt = require('jsonwebtoken');
 
 
 // middleware
@@ -35,7 +36,16 @@ async function run() {
      const selectedclassCollection = client.db("musicits").collection("selectedclass")
 
 
-   //   Asdfgh1#
+
+   //   jwt token 
+       // JW TOKEN 
+       app.post('/jwt', (req, res)=>{
+         const user = req.body 
+         const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET ,
+           {expiresIn: '1h'})
+   
+         res.send({token})
+       })
 
    //   post 
    app.post('/users', async(req, res)=>{
@@ -47,6 +57,11 @@ async function run() {
    app.post('/selectedclass', async(req, res)=>{
       const item = req.body 
       const result = await selectedclassCollection.insertOne(item)
+      res.send(result)
+    })
+  /*  app.post('/selectedclass', async(req, res)=>{
+      const item = req.body 
+      const result = await selectedclassCollection.insertOne(item)
       const id = item._id 
       const query = {_id : new ObjectId(id)}
       const updatedDoc =  {
@@ -56,7 +71,7 @@ async function run() {
       const updateResult = await classCollection.updateOne(query,updatedDoc)
       res.send(result)
     })
-
+ */
 
 
 
