@@ -59,19 +59,10 @@ async function run() {
       const result = await selectedclassCollection.insertOne(item)
       res.send(result)
     })
-  /*  app.post('/selectedclass', async(req, res)=>{
-      const item = req.body 
-      const result = await selectedclassCollection.insertOne(item)
-      const id = item._id 
-      const query = {_id : new ObjectId(id)}
-      const updatedDoc =  {
-         $set:{
-         disabled : true 
-      }} 
-      const updateResult = await classCollection.updateOne(query,updatedDoc)
-      res.send(result)
-    })
- */
+
+
+
+
 
 
 
@@ -94,8 +85,14 @@ async function run() {
         const result = await popularinstractorCollection.find().sort({ total_users: -1 }).toArray()
         res.send(result)
      })
+
      app.get('/selectedclass', async(req,res)=>{
-        const result = await selectedclassCollection.find().sort({ total_users: -1 }).toArray()
+      const email = req.query.email 
+      if(!email){
+         res.send([])
+      } 
+      const query = {email : email}
+        const result = await selectedclassCollection.find(query).sort({ total_users: -1 }).toArray()
         res.send(result)
      })
 
@@ -105,7 +102,7 @@ async function run() {
    //   delete data
    app.delete('/selectedclass/:id', async(req,res)=>{
       const id = req.params.id 
-      const query = {_id : new ObjectId(id)}
+      const query = {_id : id}
       const result = await selectedclassCollection.deleteOne(query)
       res.send(result)
    }) 
