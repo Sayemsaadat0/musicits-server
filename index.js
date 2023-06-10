@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const port = process.env.PORT || 4444 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 
 
@@ -31,24 +31,31 @@ async function run() {
      const instractorCollection = client.db("musicits").collection("instractor");
      const popularclassCollection = client.db("musicits").collection("popularclass");
      const popularinstractorCollection = client.db("musicits").collection("popularinstractor");
-     const studentCollection = client.db("musicits").collection("students")
+     const usersCollection = client.db("musicits").collection("users")
+     const selectedclassCollection = client.db("musicits").collection("selectedclass")
 
 
-
+   //   Asdfgh1#
 
    //   post 
-   app.post('/students', async(req, res)=>{
+   app.post('/users', async(req, res)=>{
       const item = req.body 
-      const result = await studentCollection.insertOne(item)
+      const result = await usersCollection.insertOne(item)
       res.send(result)
     })
-
-
-
-
-
-
-
+    
+   app.post('/selectedclass', async(req, res)=>{
+      const item = req.body 
+      const result = await selectedclassCollection.insertOne(item)
+      const id = item._id 
+      const query = {_id : new ObjectId(id)}
+      const updatedDoc =  {
+         $set:{
+         disabled : true 
+      }} 
+      const updateResult = await classCollection.updateOne(query,updatedDoc)
+      res.send(result)
+    })
 
 
 
@@ -65,14 +72,28 @@ async function run() {
         res.send(result)
      })
      app.get('/popularclass', async(req,res)=>{
-        const result = await popularclassCollection.find().sort({ total_student: -1 }).toArray()
+        const result = await popularclassCollection.find().sort({ total_users: -1 }).toArray()
         res.send(result)
      })
      app.get('/popularinstractor', async(req,res)=>{
-        const result = await popularinstractorCollection.find().sort({ total_student: -1 }).toArray()
+        const result = await popularinstractorCollection.find().sort({ total_users: -1 }).toArray()
+        res.send(result)
+     })
+     app.get('/selectedclass', async(req,res)=>{
+        const result = await selectedclassCollection.find().sort({ total_users: -1 }).toArray()
         res.send(result)
      })
 
+
+
+
+   //   delete data
+   app.delete('/selectedclass/:id', async(req,res)=>{
+      const id = req.params.id 
+      const query = {_id : new ObjectId(id)}
+      const result = await selectedclassCollection.deleteOne(query)
+      res.send(result)
+   }) 
 
 
     await client.db("admin").command({ ping: 1 });
