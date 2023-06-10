@@ -43,7 +43,6 @@ async function run() {
          const user = req.body 
          const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET ,
            {expiresIn: '1h'})
-   
          res.send({token})
        })
 
@@ -54,7 +53,7 @@ async function run() {
       const existinguser = await usersCollection.findOne(query) 
       console.log(existinguser);
       if(existinguser){
-         return res.send()
+         return res.send({message : 'user exists'})
       } 
       const result = await usersCollection.insertOne(item)
       res.send(result)
@@ -65,13 +64,6 @@ async function run() {
       const result = await selectedclassCollection.insertOne(item)
       res.send(result)
     })
-
-
-
-
-
-
-
 
 
     //  getting data from the databse
@@ -91,7 +83,6 @@ async function run() {
         const result = await popularinstractorCollection.find().sort({ total_users: -1 }).toArray()
         res.send(result)
      })
-
      app.get('/selectedclass', async(req,res)=>{
       const email = req.query.email 
       if(!email){
@@ -101,6 +92,45 @@ async function run() {
         const result = await selectedclassCollection.find(query).sort({ total_users: -1 }).toArray()
         res.send(result)
      })
+
+     app.get('/users', async(req,res)=>{ 
+      const result = await usersCollection.find().toArray() 
+      res.send(result)
+     })
+
+
+   //   patch/put  
+   app.patch('/users/admin/:id', async(req,res)=>{
+      const id  = req.params.id 
+      const filter =  {_id : new ObjectId(id)}
+      const updateDoc = {
+         $set: {
+           role : 'admin'
+         },
+       };
+   const result = await usersCollection.updateOne(filter,updateDoc)
+   res.send(result)
+      })
+
+
+      app.patch('/users/instructor/:id', async (req, res) => {
+         const id = req.params.id;
+         const filter = { _id: new ObjectId(id) };
+         const updateDoc = {
+           $set: {
+             role: 'instructor'
+           }
+         };
+       
+         const result = await usersCollection.updateOne(filter, updateDoc);
+         res.send(result);
+       });
+
+
+
+
+
+
 
 
 
