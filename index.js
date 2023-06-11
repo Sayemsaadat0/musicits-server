@@ -3,6 +3,7 @@ const app = express()
 const cors = require('cors')
 const port = process.env.PORT || 4444 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 require('dotenv').config()
 var jwt = require('jsonwebtoken');
 
@@ -11,6 +12,21 @@ var jwt = require('jsonwebtoken');
 app.use(cors())
 app.use(express.json())
 
+
+const verifyJWT = (req,res,next) =>{
+const authorization = req.headers.authorization 
+if(!authorization){
+  return res.status(401).send({error: true ,mssage: 'unothorized'})
+}
+const token = authorization.split(' ')[1]
+
+jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded)=>{
+  if(err){
+    return res.status(401).send({error: true ,mssage: 'unothorized'})  }
+    req.decoded = decoded 
+    next()
+})
+}
 
 
 
@@ -73,6 +89,20 @@ async function run() {
       res.send(result)
     })
 
+    app.post('/updatedClass', async(req,res)=>{
+      const item = req.body 
+      const result = await classCollection.insertOne(item)
+      const id = item.id
+      const filter = {_id :new ObjectId(id) } 
+      const updatedDoc = {
+        $set : {
+          approved : true
+        }
+      }
+      const approvedClass = await manageclassCollection.updateOne(filter,updatedDoc)
+      res.send(result)
+    })
+
 
     //  getting data from the databse
      app.get('/classes', async(req,res)=>{
@@ -93,11 +123,15 @@ async function run() {
      })
 
 
-     app.get('/selectedclass', async(req,res)=>{
+     app.get('/selectedclass',verifyJWT, async(req,res)=>{
       const email = req.query.email 
       if(!email){
          res.send([])
       } 
+      const decodedEmail = req.decoded.email 
+      if(email !== decodedEmail){
+        return res.status(403).send({error: true , message: 'forbidden'})
+      }
       const query = {email : email}
         const result = await selectedclassCollection.find(query).sort({ total_users: -1 }).toArray()
         res.send(result)
@@ -111,7 +145,7 @@ async function run() {
      app.get('/manageclass', async (req, res) => {
       const result = await manageclassCollection.find().sort({ total_users: -1 }).toArray();
       res.send(result);
-    });
+    })
     
 
     app.get('/myclass', async(req,res)=>{
@@ -171,6 +205,23 @@ async function run() {
       const result = await selectedclassCollection.deleteOne(query)
       res.send(result)
    }) 
+
+
+
+     // create payment inten 
+     app.post('/create-payment-intent',verifyJWT, async(req,res)=>{
+      const {price} = req.body
+      const amount = price*100
+      console.log(price, amount);
+      const paymentItent = await stripe.paymentIntents.create({
+        amount : amount,
+        currency : 'usd',
+        payment_method_types: ['card']
+      })
+      res.send({
+        clientSecret : paymentItent.client_secret
+      })
+    })
 
 
     await client.db("admin").command({ ping: 1 });
