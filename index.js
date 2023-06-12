@@ -3,8 +3,8 @@ const app = express()
 const cors = require('cors')
 const port = process.env.PORT || 4444 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 require('dotenv').config()
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 var jwt = require('jsonwebtoken');
 
 
@@ -64,7 +64,7 @@ async function run() {
          res.send({token})
        })
 
-   //   post 
+   //   users
    app.post('/users', async(req, res)=>{
       const item = req.body 
       const query = {email : item.email}
@@ -77,10 +77,58 @@ async function run() {
       res.send(result)
     })
     
-   app.post('/selectedclass', async(req, res)=>{
-      const item = req.body 
-      const result = await selectedclassCollection.insertOne(item)
+    app.patch('/users/instructor/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: 'instructor'
+        }
+      };
+    
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+
+    app.patch('/users/admin/:id', async(req,res)=>{
+      const id  = req.params.id 
+      const filter =  {_id : new ObjectId(id)}
+      const updateDoc = {
+         $set: {
+           role : 'admin'
+         },
+       };
+   const result = await usersCollection.updateOne(filter,updateDoc)
+   res.send(result)
+      })
+
+
+      app.get('/users/admin/:email', async (req, res) => {
+        const email = req.params.email;
+        const query = { email: email }
+  
+        const user = await usersCollection.findOne(query);
+        console.log(user);
+        res.send({ isAdmin: user?.role === 'admin' });
+    })
+
+
+    app.get('/users', async(req,res)=>{ 
+      // const result = await usersCollection.find().sort({ createdAt: -1 }).toArray();
+      const result = await usersCollection.find().toArray() 
       res.send(result)
+     })
+
+   
+
+
+
+
+// manage class
+     app.get('/manageclass', async (req, res) => {
+      const result = await manageclassCollection.find().sort({ total_users: -1 }).toArray();
+      res.send(result);
     })
 
    app.post('/manageclass', async(req, res)=>{
@@ -89,6 +137,20 @@ async function run() {
       res.send(result)
     })
 
+
+
+    app.patch('/manageclass/:id', async(req,res)=>{
+      const id  = req.params.id 
+      const filter =  {_id : new ObjectId(id)}
+      const updateDoc = {
+         $set: {
+           status : 'Denied'
+         },
+       };
+   const result = await manageclassCollection.updateOne(filter,updateDoc)
+   res.send(result)
+      })
+
     app.post('/updatedClass', async(req,res)=>{
       const item = req.body 
       const result = await classCollection.insertOne(item)
@@ -96,7 +158,7 @@ async function run() {
       const filter = {_id :new ObjectId(id) } 
       const updatedDoc = {
         $set : {
-          approved : true
+          'status' : 'approved'
         }
       }
       const approvedClass = await manageclassCollection.updateOne(filter,updatedDoc)
@@ -104,7 +166,24 @@ async function run() {
     })
 
 
-    //  getting data from the databse
+
+
+
+     // peoblem email diye queery korar poreo ekhane sb email diye valye chole asteche 
+     app.get('/myclass', async(req,res)=>{
+      const email = req.query.email 
+      if(!email){
+         res.send([])
+      } 
+      const query = {email : email}
+        const result = await manageclassCollection.find(query).toArray()
+        res.send(result)
+     })
+
+    
+
+
+    //  getting data from the databse 
      app.get('/classes', async(req,res)=>{
         const result = await classCollection.find().toArray()
         res.send(result)
@@ -124,6 +203,15 @@ async function run() {
 
      
 
+// selected class
+     
+   app.post('/selectedclass', async(req, res)=>{
+    const item = req.body 
+    console.log(item);
+    const result = await selectedclassCollection.insertOne(item)
+    res.send(result)
+  })
+
      app.get('/selectedclass',verifyJWT, async(req,res)=>{
       const email = req.query.email 
       if(!email){
@@ -138,86 +226,7 @@ async function run() {
         const result = await selectedclassCollection.find(query).sort({ total_users: -1 }).toArray()
         res.send(result)
      })
-
-
-
-
-
-
-     app.get('/users', async(req,res)=>{ 
-      // const result = await usersCollection.find().sort({ createdAt: -1 }).toArray();
-      const result = await usersCollection.find().toArray() 
-      res.send(result)
-     })
-
-     app.get('/manageclass', async (req, res) => {
-      const result = await manageclassCollection.find().sort({ total_users: -1 }).toArray();
-      res.send(result);
-    })
-
-    app.get('/users/admin/:email', async (req, res) => {
-      const email = req.params.email;
-      const query = { email: email }
-
-      const user = await usersCollection.findOne(query);
-      console.log(user);
-      res.send({ isAdmin: user?.role === 'admin' });
-  })
-    
-
-    // peoblem email diye queery korar poreo ekhane sb email diye valye chole asteche 
-    app.get('/myclass', async(req,res)=>{
-      const email = req.query.email 
-      if(!email){
-         res.send([])
-      } 
-      const query = {email : email}
-        const result = await manageclassCollection.find(query).toArray()
-        res.send(result)
-     })
-
-   //   patch/put  
-   app.patch('/users/admin/:id', async(req,res)=>{
-      const id  = req.params.id 
-      const filter =  {_id : new ObjectId(id)}
-      const updateDoc = {
-         $set: {
-           role : 'admin'
-         },
-       };
-   const result = await usersCollection.updateOne(filter,updateDoc)
-   res.send(result)
-      })
-
-      app.patch('/users/instructor/:id', async (req, res) => {
-         const id = req.params.id;
-         const filter = { _id: new ObjectId(id) };
-         const updateDoc = {
-           $set: {
-             role: 'instructor'
-           }
-         };
-       
-         const result = await usersCollection.updateOne(filter, updateDoc);
-         res.send(result);
-       });
-
-
-       app.patch('/manageclass/:id', async(req,res)=>{
-        const id  = req.params.id 
-        const filter =  {_id : new ObjectId(id)}
-        const updateDoc = {
-           $set: {
-             status : 'Denied'
-           },
-         };
-     const result = await manageclassCollection.updateOne(filter,updateDoc)
-     res.send(result)
-        })
-
-
-   //   delete data
-   app.delete('/selectedclass/:id', async(req,res)=>{
+     app.delete('/selectedclass/:id', async(req,res)=>{
       const id = req.params.id 
       const query = {_id : id}
       const result = await selectedclassCollection.deleteOne(query)
@@ -229,7 +238,7 @@ async function run() {
      // create payment inten 
      app.post('/create-payment-intent',verifyJWT, async(req,res)=>{
       const {price} = req.body
-      const amount = price*100
+      const amount = parseInt(price*100)
       console.log(price, amount);
       const paymentItent = await stripe.paymentIntents.create({
         amount : amount,
@@ -241,10 +250,6 @@ async function run() {
       })
     })
 
-
-
-
-  
   app.post('/payments', async (req, res) => {
       const payment = req.body;
       const result = await paymentCollection.insertOne(payment)
@@ -260,18 +265,19 @@ async function run() {
       res.send(result)
 
   })
-
-
-
-
-
   app.get('/pay/:id', async(req,res)=>{
     const id = req.params.id 
     const query = {_id : id}
     const result = await selectedclassCollection.findOne(query) 
+    console.log(result);
     res.send(result)
  }) 
 
+
+
+
+
+ 
 
 
 
