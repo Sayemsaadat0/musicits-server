@@ -148,13 +148,14 @@ async function run() {
     })
     
 
+    // peoblem email diye queery korar poreo ekhane sb email diye valye chole asteche 
     app.get('/myclass', async(req,res)=>{
       const email = req.query.email 
       if(!email){
          res.send([])
       } 
       const query = {email : email}
-        const result = await manageclassCollection.find(query).sort({ total_users: -1 }).toArray()
+        const result = await manageclassCollection.find(query).toArray()
         res.send(result)
      })
 
