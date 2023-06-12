@@ -104,18 +104,35 @@ async function run() {
       })
 
 
+      // isAdmin hole routes niye jabe or niye jabe na !  
+      app.get('/users/instructor/:email', async (req, res) => {
+        const email = req.params.email;
+        const query = { email: email }
+        const user = await usersCollection.findOne(query);
+        res.send({ isInstructor: user?.role === 'instructor' });
+    })
+
+
+      // isAdmin hole routes niye jabe or niye jabe na !  
       app.get('/users/admin/:email', async (req, res) => {
         const email = req.params.email;
         const query = { email: email }
-  
         const user = await usersCollection.findOne(query);
         console.log(user);
         res.send({ isAdmin: user?.role === 'admin' });
     })
+      
+    // isstudent hole routes niye jabe or niye jabe na !  
+      app.get('/users/student/:email', async (req, res) => {
+        const email = req.params.email;
+        const query = { email: email }
+        const user = await usersCollection.findOne(query);
+        console.log(user);
+        res.send({ isStudent: user?.role === 'student' });
+    })
 
 
     app.get('/users', async(req,res)=>{ 
-      // const result = await usersCollection.find().sort({ createdAt: -1 }).toArray();
       const result = await usersCollection.find().toArray() 
       res.send(result)
      })
