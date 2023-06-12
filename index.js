@@ -83,8 +83,7 @@ async function run() {
         $set: {
           role: 'instructor'
         }
-      };
-    
+      };    
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
