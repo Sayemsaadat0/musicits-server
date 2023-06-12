@@ -41,7 +41,6 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-     client.connect();
 
     //  collections
      const classCollection = client.db("musicits").collection("classes");
@@ -137,11 +136,6 @@ async function run() {
       res.send(result)
      })
 
-   
-
-
-
-
 // manage class
      app.get('/manageclass', async (req, res) => {
       const result = await manageclassCollection.find().sort({ total_users: -1 }).toArray();
@@ -153,7 +147,6 @@ async function run() {
       const result = await manageclassCollection.insertOne(item)
       res.send(result)
     })
-
 
 
     app.patch('/manageclass/:id', async(req,res)=>{
@@ -182,10 +175,6 @@ async function run() {
       res.send(result)
     })
 
-
-
-
-
      // peoblem email diye queery korar poreo ekhane sb email diye valye chole asteche 
      app.get('/myclass', async(req,res)=>{
       const email = req.query.email 
@@ -198,8 +187,6 @@ async function run() {
      })
 
     
-
-
     //  getting data from the databse 
      app.get('/classes', async(req,res)=>{
         const result = await classCollection.find().toArray()
@@ -292,24 +279,6 @@ async function run() {
 
 
 
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
   }
 finally {}
 }
