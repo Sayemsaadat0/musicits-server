@@ -122,6 +122,7 @@ async function run() {
         res.send(result)
      })
 
+     
 
      app.get('/selectedclass',verifyJWT, async(req,res)=>{
       const email = req.query.email 
@@ -132,10 +133,16 @@ async function run() {
       if(email !== decodedEmail){
         return res.status(403).send({error: true , message: 'forbidden'})
       }
+
       const query = {email : email}
         const result = await selectedclassCollection.find(query).sort({ total_users: -1 }).toArray()
         res.send(result)
      })
+
+
+
+
+
 
      app.get('/users', async(req,res)=>{ 
       // const result = await usersCollection.find().sort({ createdAt: -1 }).toArray();
@@ -147,6 +154,15 @@ async function run() {
       const result = await manageclassCollection.find().sort({ total_users: -1 }).toArray();
       res.send(result);
     })
+
+    app.get('/users/admin/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email }
+
+      const user = await usersCollection.findOne(query);
+      console.log(user);
+      res.send({ isAdmin: user?.role === 'admin' });
+  })
     
 
     // peoblem email diye queery korar poreo ekhane sb email diye valye chole asteche 
@@ -224,6 +240,49 @@ async function run() {
         clientSecret : paymentItent.client_secret
       })
     })
+
+
+
+
+  
+  app.post('/payments', async (req, res) => {
+      const payment = req.body;
+      const result = await paymentCollection.insertOne(payment)
+      const id = payment.bookingId;
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+          $set: {
+              paid: true,
+              transictionId:payment.transictionID
+          }
+      }
+      const updateResult= await bookingCollection.updateOne(filter, updatedDoc)
+      res.send(result)
+
+  })
+
+
+
+
+
+  app.get('/pay/:id', async(req,res)=>{
+    const id = req.params.id 
+    const query = {_id : id}
+    const result = await selectedclassCollection.findOne(query) 
+    res.send(result)
+ }) 
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     await client.db("admin").command({ ping: 1 });
