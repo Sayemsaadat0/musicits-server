@@ -138,6 +138,7 @@ async function run() {
      })
 
      app.get('/users', async(req,res)=>{ 
+      // const result = await usersCollection.find().sort({ createdAt: -1 }).toArray();
       const result = await usersCollection.find().toArray() 
       res.send(result)
      })
